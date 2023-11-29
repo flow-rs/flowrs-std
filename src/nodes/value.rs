@@ -33,7 +33,7 @@ impl<I> Node for ValueNode<I>
 where
     I: Clone + Send,
 {
-    fn on_ready(&self) -> Result<(), ReadyError>{
+    fn on_ready(&mut self) -> Result<(), ReadyError>{
         self.output.clone().send(self.value.clone()).map_err(|e| ReadyError::Other(e.into()))?;   
         Ok(())
     }

@@ -10,7 +10,7 @@ mod nodes {
     #[test]
     fn should_send_on_ready() -> Result<(), anyhow::Error> {
         let change_observer: ChangeObserver = ChangeObserver::new(); 
-        let node = ValueNode::new(42, Some(&change_observer));
+        let mut node = ValueNode::new(42, Some(&change_observer));
         let mock_output = Edge::new();
         connect(node.output.clone(), mock_output.clone());
         let _ = node.on_ready();

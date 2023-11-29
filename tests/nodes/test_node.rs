@@ -95,15 +95,15 @@ where
     I2: Clone + Send + 'static,
     O: Clone + Send + 'static,
 {
-    fn on_init(&self) -> Result<(), InitError>{ 
+    fn on_init(&mut self) -> Result<(), InitError>{ 
         Ok(())
     }
 
-    fn on_ready(&self)   -> Result<(), ReadyError>{
+    fn on_ready(&mut self)   -> Result<(), ReadyError>{
         Ok(())
     }
 
-    fn on_shutdown(&self)  -> Result<(), ShutdownError> {
+    fn on_shutdown(&mut self)  -> Result<(), ShutdownError> {
         Ok(())
     }
 

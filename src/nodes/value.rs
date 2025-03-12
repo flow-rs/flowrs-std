@@ -16,7 +16,7 @@ where
     O: Clone,
     O: fmt::Debug,
     O: FromStr,
-    O: Send + 'static,
+    O: Send + Sync + 'static,
 {
     value: O,
 
@@ -29,7 +29,7 @@ where
     O: Clone,
     O: fmt::Debug,
     O: FromStr,
-    O: Send + 'static,
+    O: Send + Sync + 'static,
 {
     // pub fn new(value: O, change_observer: Option<&ChangeObserver>) -> Self {
     //     Self {
@@ -50,7 +50,7 @@ where
     O: Clone,
     O: fmt::Debug,
     O: FromStr,
-    O: Send + 'static,
+    O: Send + Sync + 'static,
 {
     fn on_ready(&mut self) -> Result<(), ReadyError> {
         self.io
@@ -84,7 +84,7 @@ where
     O: Clone,
     O: fmt::Debug,
     O: FromStr,
-    O: Send + 'static,
+    O: Send + Sync + 'static,
 {
     value: O,
 
@@ -97,7 +97,7 @@ where
     O: Clone,
     O: fmt::Debug,
     O: FromStr,
-    O: Send + 'static,
+    O: Send + Sync + 'static,
 {
     // pub fn new(value: O, change_observer: Option<&ChangeObserver>) -> Self {
     //     Self {
@@ -118,7 +118,7 @@ where
     O: Clone,
     O: fmt::Debug,
     O: FromStr,
-    O: Send + 'static,
+    O: Send + Sync + 'static,
 {
     fn on_update(&mut self) -> Result<(), UpdateError> {
         self.io.outputs.0.send(self.value.clone())?;

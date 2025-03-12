@@ -14,15 +14,15 @@ where
     I1: fmt::Debug,
     I1: FromStr,
     I1: Add<I2, Output = O>,
-    I1: Send + 'static,
+    I1: Send + Sync + 'static,
     I2: Clone,
     I2: fmt::Debug,
     I2: FromStr,
-    I2: Send + 'static,
+    I2: Send + Sync + 'static,
     O: Clone,
     O: fmt::Debug,
     O: FromStr,
-    O: Send + 'static,
+    O: Send + Sync + 'static,
 {
     state: BinOpState<I1, I2>,
 
@@ -35,15 +35,15 @@ where
     I1: fmt::Debug,
     I1: FromStr,
     I1: Add<I2, Output = O>,
-    I1: Send + 'static,
+    I1: Send + Sync + 'static,
     I2: Clone,
     I2: fmt::Debug,
     I2: FromStr,
-    I2: Send + 'static,
+    I2: Send + Sync + 'static,
     O: Clone,
     O: fmt::Debug,
     O: FromStr,
-    O: Send + 'static,
+    O: Send + Sync + 'static,
 {
     // pub fn new(change_observer: Option<&ChangeObserver>) -> Self {
     //     Self {
@@ -105,15 +105,15 @@ where
     I1: fmt::Debug,
     I1: FromStr,
     I1: Add<I2, Output = O>,
-    I1: Send + 'static,
+    I1: Send + Sync + 'static,
     I2: Clone,
     I2: fmt::Debug,
     I2: FromStr,
-    I2: Send + 'static,
+    I2: Send + Sync + 'static,
     O: Clone,
     O: fmt::Debug,
     O: FromStr,
-    O: Send + 'static,
+    O: Send + Sync + 'static,
 {
     fn on_update(&mut self) -> anyhow::Result<(), UpdateError> {
         match self.state {

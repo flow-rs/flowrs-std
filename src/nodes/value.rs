@@ -4,12 +4,15 @@ use std::str::FromStr;
 use flowrs::connection::EdgeTrait;
 use flowrs::nodes::node_io::NodeIO;
 use flowrs::nodes::node_io::SetupInputsSync;
+use flowrs::nodes::node_io::SetupOutputs;
 use flowrs::nodes::node_io::SetupOutputsSync;
+use flowrs::nodes::node_io::TypedOutput;
 //use flowrs::RuntimeConnectable;
 use flowrs::{
     connection::Output,
     node::{Node, ReadyError, UpdateError},
 };
+use tokio::runtime::Runtime;
 //#[derive(RuntimeConnectable)]
 pub struct ValueNode<O>
 where
@@ -21,7 +24,7 @@ where
     value: O,
 
     //#[output]
-    pub io: NodeIO<(), (Output<O>,)>,
+    pub io: NodeIO<(), (TypedOutput<O>,)>,
 }
 
 impl<O> ValueNode<O>
@@ -40,7 +43,12 @@ where
     pub fn new(value: O) -> Self {
         Self {
             value,
-            io: NodeIO::new((), (Output::new_local(),)),
+            io: NodeIO::new(
+                (),
+                (TypedOutput {
+                    output: Output::new_local(),
+                },),
+            ),
         }
     }
 }
@@ -56,6 +64,7 @@ where
         self.io
             .outputs
             .0
+            .output
             .send(self.value.clone())
             .map_err(|e| ReadyError::Other(e.into()))?;
         Ok(())
@@ -70,11 +79,12 @@ where
     }
 
     fn setup_input(&mut self, idx: u128, local: bool) {
-        self.io.inputs.setup_input_sync(idx, local)
+        //self.io.inputs.setup_input_sync(idx, local)
     }
 
     fn setup_output(&mut self, idx: u128, local: bool) {
-        self.io.outputs.setup_output_sync(idx, local);
+        let rt = Runtime::new().unwrap();
+        rt.block_on(self.io.outputs.0.output.setup_output(idx, local));
     }
 }
 
@@ -89,7 +99,7 @@ where
     value: O,
 
     //#[output]
-    io: NodeIO<(), (Output<O>,)>,
+    pub io: NodeIO<(), (TypedOutput<O>,)>,
 }
 
 impl<O> ValueUpdateNode<O>
@@ -108,7 +118,12 @@ where
     pub fn new(value: O) -> Self {
         Self {
             value,
-            io: NodeIO::new((), (Output::new_local(),)),
+            io: NodeIO::new(
+                (),
+                (TypedOutput {
+                    output: Output::new_local(),
+                },),
+            ),
         }
     }
 }
@@ -121,7 +136,7 @@ where
     O: Send + Sync + 'static,
 {
     fn on_update(&mut self) -> Result<(), UpdateError> {
-        self.io.outputs.0.send(self.value.clone())?;
+        self.io.outputs.0.output.send(self.value.clone())?;
         Ok(())
     }
 
@@ -138,6 +153,7 @@ where
     }
 
     fn setup_output(&mut self, idx: u128, local: bool) {
-        self.io.outputs.setup_output_sync(idx, local);
+        let rt = Runtime::new().unwrap();
+        rt.block_on(self.io.outputs.0.output.setup_output(idx, local));
     }
 }

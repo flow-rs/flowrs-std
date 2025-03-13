@@ -1,12 +1,12 @@
 use super::binops::BinOpState;
 //use crate::handle_sequentially;
+use crate::add::fmt::Debug;
+use flowrs::nodes::node_io::{NodeIO, SetupInputsSync, SetupOutputsSync, TypedInput, TypedOutput};
 use flowrs::{
     connection::{EdgeTrait, Input, Output},
     node::{Node, UpdateError},
-    nodes::node_io::{NodeIO, SetupInputsSync, SetupOutputsSync},
 };
 use std::{fmt, ops::Add, str::FromStr};
-
 //#[derive(RuntimeConnectable)]
 pub struct AddNode<I1, I2, O>
 where
@@ -26,7 +26,7 @@ where
 {
     state: BinOpState<I1, I2>,
 
-    io: NodeIO<(Input<I1>, Input<I2>), (Output<O>,)>,
+    io: NodeIO<(TypedInput<I1>, TypedInput<I2>), (TypedOutput<O>,)>,
 }
 
 impl<I1, I2, O> AddNode<I1, I2, O>
@@ -57,8 +57,17 @@ where
     pub fn new() -> Self {
         Self {
             io: NodeIO::new(
-                (Input::new_local(), Input::new_local()),
-                (Output::new_local(),),
+                (
+                    TypedInput {
+                        input: Input::new_local(),
+                    },
+                    TypedInput {
+                        input: Input::new_local(),
+                    },
+                ),
+                (TypedOutput {
+                    output: Output::new_local(),
+                },),
             ),
             state: BinOpState::None,
         }
@@ -74,7 +83,7 @@ where
             BinOpState::I2(i) => {
                 let out = v + i.clone();
                 self.state = BinOpState::None;
-                self.io.outputs.0.send(out)?;
+                self.io.outputs.0.output.send(out)?;
             }
             BinOpState::None => self.state = BinOpState::I1(v),
         }
@@ -91,7 +100,7 @@ where
             BinOpState::I1(i) => {
                 let out = i.clone() + v;
                 self.state = BinOpState::None;
-                self.io.outputs.0.send(out)?;
+                self.io.outputs.0.output.send(out)?;
             }
             BinOpState::None => self.state = BinOpState::I2(v),
         }
@@ -118,12 +127,12 @@ where
     fn on_update(&mut self) -> anyhow::Result<(), UpdateError> {
         match self.state {
             super::binops::BinOpState::I1(_) => {
-                if let Ok(i2) = self.io.inputs.0.next() {
+                if let Ok(i2) = self.io.inputs.0.input.next() {
                     self.handle_1(i2)?;
                 }
             }
             _ => {
-                if let Ok(i1) = self.io.inputs.1.next() {
+                if let Ok(i1) = self.io.inputs.1.input.next() {
                     self.handle_2(i1)?;
                 }
             }
@@ -131,12 +140,12 @@ where
         // The functionality is repeated to handle two inputs per epoche
         match self.state {
             super::binops::BinOpState::I1(_) => {
-                if let Ok(i2) = self.io.inputs.0.next() {
+                if let Ok(i2) = self.io.inputs.0.input.next() {
                     self.handle_1(i2)?;
                 }
             }
             _ => {
-                if let Ok(i1) = self.io.inputs.1.next() {
+                if let Ok(i1) = self.io.inputs.1.input.next() {
                     self.handle_2(i1)?;
                 }
             }
@@ -201,12 +210,12 @@ mod tests {
     fn should_add_132() -> Result<(), UpdateError> {
         // Create AddNode (using default local communication)
         let mut add: AddNode<i32, i32, i32> = AddNode::new();
-        add.io.inputs.0.send(1)?;
-        add.io.inputs.1.send(2)?;
+        add.io.inputs.0.input.send(1)?;
+        add.io.inputs.1.input.send(2)?;
         add.on_update()?;
 
         let expected = 3;
-        let actual = add.io.outputs.0.next()?;
+        let actual = add.io.outputs.0.output.next()?;
         Ok(assert_eq!(expected, actual))
     }
 

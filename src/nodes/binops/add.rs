@@ -1,7 +1,9 @@
 use super::binops::BinOpState;
 //use crate::handle_sequentially;
 use crate::add::fmt::Debug;
-use flowrs::nodes::node_io::{NodeIO, SetupInputsSync, SetupOutputsSync, TypedInput, TypedOutput};
+use flowrs::nodes::node_io::{
+    NodeIO, SetupIO, SetupInputsSync, SetupOutputsSync, TypedInput, TypedOutput,
+};
 use flowrs::{
     connection::{EdgeTrait, Input, Output},
     node::{Node, UpdateError},
@@ -194,6 +196,10 @@ where
 
     fn setup_output(&mut self, idx: u128, local: bool) {
         self.io.outputs.setup_output_sync(idx, local);
+    }
+
+    fn get_io_mut(&mut self) -> &mut dyn SetupIO {
+        &mut self.io
     }
 }
 

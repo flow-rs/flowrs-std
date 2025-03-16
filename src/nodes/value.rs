@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 use flowrs::connection::EdgeTrait;
 use flowrs::nodes::node_io::NodeIO;
+use flowrs::nodes::node_io::SetupIO;
 use flowrs::nodes::node_io::SetupInputsSync;
 use flowrs::nodes::node_io::SetupOutputs;
 use flowrs::nodes::node_io::SetupOutputsSync;
@@ -86,6 +87,10 @@ where
         let rt = Runtime::new().unwrap();
         rt.block_on(self.io.outputs.0.output.setup_output(idx, local));
     }
+
+    fn get_io_mut(&mut self) -> &mut dyn SetupIO {
+        &mut self.io
+    }
 }
 
 //#[derive(RuntimeConnectable)]
@@ -155,5 +160,9 @@ where
     fn setup_output(&mut self, idx: u128, local: bool) {
         let rt = Runtime::new().unwrap();
         rt.block_on(self.io.outputs.0.output.setup_output(idx, local));
+    }
+
+    fn get_io_mut(&mut self) -> &mut dyn SetupIO {
+        &mut self.io
     }
 }

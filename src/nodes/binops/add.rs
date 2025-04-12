@@ -127,31 +127,34 @@ where
     O: Send + Sync + 'static,
 {
     fn on_update(&mut self) -> anyhow::Result<(), UpdateError> {
+        // First input pass
         match self.state {
-            super::binops::BinOpState::I1(_) => {
-                if let Ok(i2) = self.io.inputs.0.input.next() {
+            BinOpState::I1(_) => {
+                if let Ok(Some(i2)) = self.io.inputs.0.input.next() {
                     self.handle_1(i2)?;
                 }
             }
             _ => {
-                if let Ok(i1) = self.io.inputs.1.input.next() {
+                if let Ok(Some(i1)) = self.io.inputs.1.input.next() {
                     self.handle_2(i1)?;
                 }
             }
         }
-        // The functionality is repeated to handle two inputs per epoche
+
+        // Second pass to catch a possible input pair in the same epoch
         match self.state {
-            super::binops::BinOpState::I1(_) => {
-                if let Ok(i2) = self.io.inputs.0.input.next() {
+            BinOpState::I1(_) => {
+                if let Ok(Some(i2)) = self.io.inputs.0.input.next() {
                     self.handle_1(i2)?;
                 }
             }
             _ => {
-                if let Ok(i1) = self.io.inputs.1.input.next() {
+                if let Ok(Some(i1)) = self.io.inputs.1.input.next() {
                     self.handle_2(i1)?;
                 }
             }
         }
+
         Ok(())
     }
 
@@ -221,7 +224,7 @@ mod tests {
         add.on_update()?;
 
         let expected = 3;
-        let actual = add.io.outputs.0.output.next()?;
+        let actual = add.io.outputs.0.output.next()?.unwrap();
         Ok(assert_eq!(expected, actual))
     }
 

@@ -1,6 +1,6 @@
 use super::binops::BinOpState;
 //use crate::handle_sequentially;
-use crate::add::fmt::Debug;
+use flowrs::nodes::node::ReceiveError;
 use flowrs::nodes::node_io::{
     NodeIO, SetupIO, SetupInputsSync, SetupOutputsSync, TypedInput, TypedOutput,
 };
@@ -129,28 +129,40 @@ where
     fn on_update(&mut self) -> anyhow::Result<(), UpdateError> {
         // First input pass
         match self.state {
-            BinOpState::I1(_) => {
-                if let Ok(Some(i2)) = self.io.inputs.0.input.next() {
-                    self.handle_1(i2)?;
+            BinOpState::I1(_) => match self.io.inputs.0.input.next() {
+                Ok(Some(i2)) => self.handle_1(i2)?,
+                Ok(None) => return Ok(()),
+                Err(ReceiveError::NoMessageAvailable) => return Ok(()),
+                Err(e) => {
+                    return Err(UpdateError::RecvError {
+                        message: e.to_string(),
+                    })
                 }
-            }
-            _ => {
-                if let Ok(Some(i1)) = self.io.inputs.1.input.next() {
-                    self.handle_2(i1)?;
+            },
+            _ => match self.io.inputs.1.input.next() {
+                Ok(Some(i1)) => self.handle_2(i1)?,
+                Ok(None) => return Ok(()),
+                Err(ReceiveError::NoMessageAvailable) => return Ok(()),
+                Err(e) => {
+                    return Err(UpdateError::RecvError {
+                        message: e.to_string(),
+                    })
                 }
-            }
+            },
         }
 
-        // Second pass to catch a possible input pair in the same epoch
+        // Second input pass
         match self.state {
             BinOpState::I1(_) => {
-                if let Ok(Some(i2)) = self.io.inputs.0.input.next() {
-                    self.handle_1(i2)?;
+                match self.io.inputs.0.input.next() {
+                    Ok(Some(i2)) => self.handle_1(i2)?,
+                    _ => {} // Gracefully skip if not ready or error already handled
                 }
             }
             _ => {
-                if let Ok(Some(i1)) = self.io.inputs.1.input.next() {
-                    self.handle_2(i1)?;
+                match self.io.inputs.1.input.next() {
+                    Ok(Some(i1)) => self.handle_2(i1)?,
+                    _ => {} // Gracefully skip if not ready or error already handled
                 }
             }
         }

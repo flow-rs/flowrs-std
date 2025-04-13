@@ -1,25 +1,24 @@
-use std::fmt::{self, Debug};
+use std::fmt::Debug;
 use std::str::FromStr;
 
 use flowrs::connection::EdgeTrait;
-use flowrs::connection::{Input, Output};
+use flowrs::connection::Input;
 use flowrs::exec::execution_mode::ExecutionMode;
-use flowrs::node::{Node, UpdateError};
-use flowrs::nodes::node_io::{
-    NodeIO, SetupIO, SetupInputsSync, SetupOutputsSync, TypedInput, TypedOutput,
-};
+use flowrs::node::{Node, ReceiveError, UpdateError};
+use flowrs::nodes::node_io::{NodeIO, SetupIO, SetupInputsSync, TypedInput};
 pub struct DebugNode<I>
 where
     I: Clone + Debug + FromStr + Send + Sync + 'static,
 {
     io: NodeIO<(TypedInput<I>,), ()>,
+    warn_if_no_message: bool,
 }
 
 impl<I> DebugNode<I>
 where
     I: Clone + Debug + FromStr + Send + Sync + 'static,
 {
-    pub fn new() -> Self {
+    pub fn new(warn_if_no_message: bool) -> Self {
         Self {
             io: NodeIO::new(
                 (TypedInput {
@@ -27,6 +26,7 @@ where
                 },),
                 (), // no outputs
             ),
+            warn_if_no_message,
         }
     }
 }
@@ -36,13 +36,23 @@ where
     I: Clone + Debug + FromStr + Send + Sync + 'static,
 {
     fn on_update(&mut self) -> Result<(), UpdateError> {
-        if let Ok(Some(value)) = self.io.inputs.0.input.next() {
-            println!(
-                "[DebugNode] Thread {:?} | Value: {:?}",
-                std::thread::current().id(),
-                value
-            );
+        match self.io.inputs.0.input.next() {
+            Ok(Some(value)) => {
+                println!("[DebugNode] Value: {:?}", value);
+            }
+            Ok(None) | Err(ReceiveError::NoMessageAvailable) => {
+                if self.warn_if_no_message {
+                    println!("[DebugNode] ⚠️ No value received.");
+                }
+                return Ok(()); //Gracefully skip to the next loop iteration
+            }
+            Err(e) => {
+                return Err(UpdateError::RecvError {
+                    message: e.to_string(),
+                });
+            }
         }
+
         Ok(())
     }
 

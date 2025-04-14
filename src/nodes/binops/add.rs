@@ -126,43 +126,31 @@ where
     O: FromStr,
     O: Send + Sync + 'static,
 {
-    fn on_update(&mut self) -> anyhow::Result<(), UpdateError> {
+    fn on_update(&mut self) -> Result<(), UpdateError> {
         // First input pass
         match self.state {
-            BinOpState::I1(_) => match self.io.inputs.0.input.next() {
-                Ok(Some(i2)) => self.handle_1(i2)?,
-                Ok(None) => return Ok(()),
-                Err(ReceiveError::NoMessageAvailable) => return Ok(()),
-                Err(e) => {
-                    return Err(UpdateError::RecvError {
-                        message: e.to_string(),
-                    })
-                }
-            },
-            _ => match self.io.inputs.1.input.next() {
-                Ok(Some(i1)) => self.handle_2(i1)?,
-                Ok(None) => return Ok(()),
-                Err(ReceiveError::NoMessageAvailable) => return Ok(()),
-                Err(e) => {
-                    return Err(UpdateError::RecvError {
-                        message: e.to_string(),
-                    })
-                }
-            },
-        }
-
-        // Second input pass
-        match self.state {
             BinOpState::I1(_) => {
-                match self.io.inputs.0.input.next() {
-                    Ok(Some(i2)) => self.handle_1(i2)?,
-                    _ => {} // Gracefully skip if not ready or error already handled
+                if let Some(i2) = self.io.inputs.0.input.edge.take() {
+                    self.handle_1(i2)?;
                 }
             }
             _ => {
-                match self.io.inputs.1.input.next() {
-                    Ok(Some(i1)) => self.handle_2(i1)?,
-                    _ => {} // Gracefully skip if not ready or error already handled
+                if let Some(i1) = self.io.inputs.1.input.edge.take() {
+                    self.handle_2(i1)?;
+                }
+            }
+        }
+
+        // Second input pass (opposite branch)
+        match self.state {
+            BinOpState::I1(_) => {
+                if let Some(i2) = self.io.inputs.0.input.edge.take() {
+                    self.handle_1(i2)?;
+                }
+            }
+            _ => {
+                if let Some(i1) = self.io.inputs.1.input.edge.take() {
+                    self.handle_2(i1)?;
                 }
             }
         }

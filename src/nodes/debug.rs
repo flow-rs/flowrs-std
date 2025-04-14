@@ -36,20 +36,15 @@ where
     I: Clone + Debug + FromStr + Send + Sync + 'static,
 {
     fn on_update(&mut self) -> Result<(), UpdateError> {
-        match self.io.inputs.0.input.next() {
-            Ok(Some(value)) => {
+        match self.io.inputs.0.input.edge.take() {
+            Some(value) => {
                 println!("[DebugNode] Value: {:?}", value);
             }
-            Ok(None) | Err(ReceiveError::NoMessageAvailable) => {
+            None => {
                 if self.warn_if_no_message {
                     println!("[DebugNode] ⚠️ No value received.");
                 }
-                return Ok(()); //Gracefully skip to the next loop iteration
-            }
-            Err(e) => {
-                return Err(UpdateError::RecvError {
-                    message: e.to_string(),
-                });
+                return Ok(()); // Gracefully skip to the next loop iteration
             }
         }
 

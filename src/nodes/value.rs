@@ -72,7 +72,7 @@ where
     }
 
     fn on_update(&mut self) -> Result<(), UpdateError> {
-        println!("[DEBUG] Sending Value {}", value);
+        println!("[DEBUG] Sending Value {:?}", self.value);
         self.io.outputs.0.output.send(self.value.clone())?;
         Ok(())
     }

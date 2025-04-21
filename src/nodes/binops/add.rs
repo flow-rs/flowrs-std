@@ -277,7 +277,7 @@ where
             .expect("[SimpleAddNode] Input 1 missing");
 
         let result = a + b;
-        println!("[DEBUG] Sending Value {}", result);
+        println!("[DEBUG] Sending Value {:?}", result);
         self.io.outputs.0.output.send(result)?;
 
         Ok(())

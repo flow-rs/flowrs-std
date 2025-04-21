@@ -127,30 +127,45 @@ where
     O: Send + Sync + 'static,
 {
     fn on_update(&mut self) -> Result<(), UpdateError> {
-        // First input pass
+        println!(
+            "[AddNode] on_update() called. Current state: {:?}",
+            self.state
+        );
+
         match self.state {
             BinOpState::I1(_) => {
                 if let Some(i2) = self.io.inputs.0.input.edge.take() {
+                    println!("[AddNode] Got I2: {:?}", i2);
                     self.handle_1(i2)?;
+                } else {
+                    println!("[AddNode] I2 not ready.");
                 }
             }
             _ => {
                 if let Some(i1) = self.io.inputs.1.input.edge.take() {
+                    println!("[AddNode] Got I1: {:?}", i1);
                     self.handle_2(i1)?;
+                } else {
+                    println!("[AddNode] I1 not ready.");
                 }
             }
         }
 
-        // Second input pass (opposite branch)
         match self.state {
             BinOpState::I1(_) => {
                 if let Some(i2) = self.io.inputs.0.input.edge.take() {
+                    println!("[AddNode] Got I2 (second pass): {:?}", i2);
                     self.handle_1(i2)?;
+                } else {
+                    println!("[AddNode] I2 not ready (second pass).");
                 }
             }
             _ => {
                 if let Some(i1) = self.io.inputs.1.input.edge.take() {
+                    println!("[AddNode] Got I1 (second pass): {:?}", i1);
                     self.handle_2(i1)?;
+                } else {
+                    println!("[AddNode] I1 not ready (second pass).");
                 }
             }
         }
@@ -191,6 +206,111 @@ where
 
     fn get_output_count(&self) -> u128 {
         1 // One output
+    }
+
+    fn setup_input(&mut self, idx: u128, local: bool) {
+        self.io.inputs.setup_input_sync(idx, local);
+    }
+
+    fn setup_output(&mut self, idx: u128, local: bool) {
+        self.io.outputs.setup_output_sync(idx, local);
+    }
+
+    fn get_io_mut(&mut self) -> &mut dyn SetupIO {
+        &mut self.io
+    }
+}
+
+pub struct SimpleAddNode<T>
+where
+    T: Clone + fmt::Debug + FromStr + Add<Output = T> + Send + Sync + 'static,
+{
+    io: NodeIO<(TypedInput<T>, TypedInput<T>), (TypedOutput<T>,)>,
+}
+
+impl<T> SimpleAddNode<T>
+where
+    T: Clone + fmt::Debug + FromStr + Add<Output = T> + Send + Sync + 'static,
+{
+    pub fn new() -> Self {
+        Self {
+            io: NodeIO::new(
+                (
+                    TypedInput {
+                        input: Input::new_local(),
+                    },
+                    TypedInput {
+                        input: Input::new_local(),
+                    },
+                ),
+                (TypedOutput {
+                    output: Output::new_local(),
+                },),
+            ),
+        }
+    }
+}
+
+impl<T> Node for SimpleAddNode<T>
+where
+    T: Clone + fmt::Debug + FromStr + Add<Output = T> + Send + Sync + 'static,
+{
+    fn on_update(&mut self) -> Result<(), UpdateError> {
+        println!("[SimpleAddNode] on_update() called.");
+
+        // ⚠ Assumes both inputs are ready – will panic otherwise
+        let a = self
+            .io
+            .inputs
+            .0
+            .input
+            .edge
+            .take()
+            .expect("[SimpleAddNode] Input 0 missing");
+        let b = self
+            .io
+            .inputs
+            .1
+            .input
+            .edge
+            .take()
+            .expect("[SimpleAddNode] Input 1 missing");
+
+        let result = a + b;
+        self.io.outputs.0.output.send(result)?;
+
+        Ok(())
+    }
+
+    fn set_execution_mode(
+        &mut self,
+        _mode: flowrs::exec::execution_mode::ExecutionMode,
+    ) -> flowrs::exec::execution_mode::ExecutionMode {
+        flowrs::exec::execution_mode::ExecutionMode::Continuous
+    }
+
+    fn get_execution_mode(&self) -> flowrs::exec::execution_mode::ExecutionMode {
+        flowrs::exec::execution_mode::ExecutionMode::Continuous
+    }
+
+    fn on_init(&mut self) -> Result<(), flowrs::node::InitError> {
+        Ok(())
+    }
+
+    fn on_ready(&mut self) -> Result<(), flowrs::node::ReadyError> {
+        Ok(())
+    }
+
+    fn on_shutdown(&mut self) -> Result<(), flowrs::node::ShutdownError> {
+        Ok(())
+    }
+
+    fn get_input_count(&self) -> u128 {
+        2
+    }
+
+    fn get_output_count(&self) -> u128 {
+        1
     }
 
     fn setup_input(&mut self, idx: u128, local: bool) {

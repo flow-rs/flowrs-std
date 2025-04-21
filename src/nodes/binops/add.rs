@@ -277,6 +277,7 @@ where
             .expect("[SimpleAddNode] Input 1 missing");
 
         let result = a + b;
+        println!("[DEBUG] Sending Value {}", result);
         self.io.outputs.0.output.send(result)?;
 
         Ok(())
@@ -346,6 +347,18 @@ mod tests {
         let expected = 3;
         let actual = add.io.outputs.0.output.next()?.unwrap();
         Ok(assert_eq!(expected, actual))
+    }
+
+    #[test]
+    fn simple_add_adds_correctly() -> Result<(), UpdateError> {
+        let mut node = SimpleAddNode::<u32>::new();
+        node.io.inputs.0.input.send(5)?;
+        node.io.inputs.1.input.send(7)?;
+        node.on_update()?;
+
+        let out = node.io.outputs.0.output.next()?.unwrap();
+        assert_eq!(out, 12);
+        Ok(())
     }
 
     // #[test]

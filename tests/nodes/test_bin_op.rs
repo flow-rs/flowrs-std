@@ -82,7 +82,7 @@ mod nodes {
             (0..1000).for_each(|_| {
                 match add1.on_update() {
                     Ok(_) => (),
-                    Err(e) => println!("{:?}", e),
+                    Err(e) => tracing::debug!("{:?}", e),
                 };
             });
         });
@@ -90,7 +90,7 @@ mod nodes {
             (0..1000).for_each(|_| {
                 match add2.on_update() {
                     Ok(_) => (),
-                    Err(e) => println!("{:?}", e),
+                    Err(e) => tracing::debug!("{:?}", e),
                 };
             });
         });

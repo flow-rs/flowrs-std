@@ -4,11 +4,11 @@ use std::rc::Rc;
 
 use serde_json::Value;
 
+use flowrs::Connectable;
 use flowrs::{
     connection::{Input, Output, RuntimeConnectable},
-    node::{Context, Node, UpdateError, InitError, ShutdownError, ReadyError},
+    node::{Context, InitError, Node, ReadyError, ShutdownError, UpdateError},
 };
-use flowrs::Connectable;
 
 #[derive(Clone)]
 enum AddNodeState<I1, I2> {
@@ -51,7 +51,6 @@ where
     }
 
     fn handle_1(&self, v: I1) -> Result<(), UpdateError> {
-        
         match state.clone() {
             AddNodeState::I1(_) => {
                 return Err(UpdateError::SequenceError {
@@ -95,15 +94,15 @@ where
     I2: Clone + Send + 'static,
     O: Clone + Send + 'static,
 {
-    fn on_init(&self) -> Result<(), InitError>{ 
+    fn on_init(&self) -> Result<(), InitError> {
         Ok(())
     }
 
-    fn on_ready(&self)   -> Result<(), ReadyError>{
+    fn on_ready(&self) -> Result<(), ReadyError> {
         Ok(())
     }
 
-    fn on_shutdown(&self)  -> Result<(), ShutdownError> {
+    fn on_shutdown(&self) -> Result<(), ShutdownError> {
         Ok(())
     }
 
@@ -114,12 +113,12 @@ where
     // To be replaced by macro
     fn update(&self) -> Result<(), UpdateError> {
         if let Ok(i1) = self.input_1.next_elem() {
-            println!("UPDATE1");
+            tracing::debug!("UPDATE1");
             self.handle_1(i1)?;
         }
 
         if let Ok(i2) = self.input_2.next_elem() {
-            println!("UPDATE2");
+            tracing::debug!("UPDATE2");
             self.handle_2(i2)?;
         }
         Ok(())
@@ -128,14 +127,15 @@ where
 
 #[cfg(test)]
 mod nodes {
-    use std::{thread, rc::Rc, any::Any};
+    use std::{any::Any, rc::Rc, thread};
 
-    use flowrs::{connection::{ConnectError, Edge, connect, Input, RuntimeConnectable, Output}, node::{Context, State, Node}};
+    use flowrs::{
+        connection::{connect, ConnectError, Edge, Input, Output, RuntimeConnectable},
+        node::{Context, Node, State},
+    };
     use serde_json::Value;
 
     use super::AddNode;
-
-
 
     #[test]
     fn should_add_132() -> Result<(), ConnectError<i32>> {
@@ -211,7 +211,7 @@ mod nodes {
             (0..100).for_each(|_| {
                 match add1.update() {
                     Ok(_) => (),
-                    Err(e) => println!("{:?}", e),
+                    Err(e) => tracing::debug!("{:?}", e),
                 };
             });
         });
@@ -219,7 +219,7 @@ mod nodes {
             (0..100).for_each(|_| {
                 match add2.update() {
                     Ok(_) => (),
-                    Err(e) => println!("{:?}", e),
+                    Err(e) => tracing::debug!("{:?}", e),
                 };
             });
         });

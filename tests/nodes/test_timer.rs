@@ -33,7 +33,7 @@ impl Node for ReportNode {
 
 #[cfg(test)]
 mod nodes {
-    use std::{sync::mpsc::channel, thread, time::Duration, task::Poll};
+    use std::{sync::mpsc::channel, task::Poll, thread, time::Duration};
 
     use flowrs::{
         connection::connect,
@@ -77,7 +77,8 @@ mod nodes {
             Some(&change_observer),
         );
 
-        let node_2: TimerNode<T, bool> = TimerNode::new_with_token(timer, true, Some(&change_observer));
+        let node_2: TimerNode<T, bool> =
+            TimerNode::new_with_token(timer, true, Some(&change_observer));
 
         let node_3 = DebugNode::<bool>::new(Some(&change_observer));
 
@@ -110,7 +111,7 @@ mod nodes {
 
         thread::sleep(Duration::from_secs(sleep_seconds));
 
-        //println!("                                      ----> {:?} CANCEL", std::thread::current().id());
+        //tracing::debug!("                                      ----> {:?} CANCEL", std::thread::current().id());
 
         controller.lock().unwrap().cancel();
 
@@ -120,7 +121,7 @@ mod nodes {
 
         let asserted_num_iters = sleep_seconds / timer_interval_seconds;
 
-        //println!("{} {}", num_iters, asserted_num_iters.abs_diff(num_iters as u64));
+        //tracing::debug!("{} {}", num_iters, asserted_num_iters.abs_diff(num_iters as u64));
         assert!(asserted_num_iters.abs_diff(num_iters as u64) <= 1);
     }
 

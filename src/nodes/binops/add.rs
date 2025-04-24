@@ -127,7 +127,7 @@ where
     O: Send + Sync + 'static,
 {
     fn on_update(&mut self) -> Result<(), UpdateError> {
-        println!(
+        tracing::debug!(
             "[AddNode] on_update() called. Current state: {:?}",
             self.state
         );
@@ -135,18 +135,18 @@ where
         match self.state {
             BinOpState::I1(_) => {
                 if let Some(i2) = self.io.inputs.0.input.edge.take() {
-                    println!("[AddNode] Got I2: {:?}", i2);
+                    tracing::debug!("[AddNode] Got I2: {:?}", i2);
                     self.handle_1(i2)?;
                 } else {
-                    println!("[AddNode] I2 not ready.");
+                    tracing::debug!("[AddNode] I2 not ready.");
                 }
             }
             _ => {
                 if let Some(i1) = self.io.inputs.1.input.edge.take() {
-                    println!("[AddNode] Got I1: {:?}", i1);
+                    tracing::debug!("[AddNode] Got I1: {:?}", i1);
                     self.handle_2(i1)?;
                 } else {
-                    println!("[AddNode] I1 not ready.");
+                    tracing::debug!("[AddNode] I1 not ready.");
                 }
             }
         }
@@ -154,18 +154,18 @@ where
         match self.state {
             BinOpState::I1(_) => {
                 if let Some(i2) = self.io.inputs.0.input.edge.take() {
-                    println!("[AddNode] Got I2 (second pass): {:?}", i2);
+                    tracing::debug!("[AddNode] Got I2 (second pass): {:?}", i2);
                     self.handle_1(i2)?;
                 } else {
-                    println!("[AddNode] I2 not ready (second pass).");
+                    tracing::debug!("[AddNode] I2 not ready (second pass).");
                 }
             }
             _ => {
                 if let Some(i1) = self.io.inputs.1.input.edge.take() {
-                    println!("[AddNode] Got I1 (second pass): {:?}", i1);
+                    tracing::debug!("[AddNode] Got I1 (second pass): {:?}", i1);
                     self.handle_2(i1)?;
                 } else {
-                    println!("[AddNode] I1 not ready (second pass).");
+                    tracing::debug!("[AddNode] I1 not ready (second pass).");
                 }
             }
         }
@@ -256,7 +256,7 @@ where
     T: Clone + fmt::Debug + FromStr + Add<Output = T> + Send + Sync + 'static,
 {
     fn on_update(&mut self) -> Result<(), UpdateError> {
-        println!("[SimpleAddNode] on_update() called.");
+        tracing::debug!("[SimpleAddNode] on_update() called.");
 
         // ⚠ Assumes both inputs are ready – will panic otherwise
         let a = self
@@ -277,7 +277,7 @@ where
             .expect("[SimpleAddNode] Input 1 missing");
 
         let result = a + b;
-        println!("[DEBUG] Sending Value {:?}", result);
+        tracing::debug!("[DEBUG] Sending Value {:?}", result);
         self.io.outputs.0.output.send(result)?;
 
         Ok(())

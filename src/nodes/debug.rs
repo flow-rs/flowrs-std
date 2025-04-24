@@ -38,11 +38,11 @@ where
     fn on_update(&mut self) -> Result<(), UpdateError> {
         match self.io.inputs.0.input.edge.take() {
             Some(value) => {
-                println!("[DebugNode] Value: {:?}", value);
+                tracing::debug!("[DebugNode] Value: {:?}", value);
             }
             None => {
                 if self.warn_if_no_message {
-                    println!("[DebugNode] ⚠️ No value received.");
+                    tracing::debug!("[DebugNode] ⚠️ No value received.");
                 }
                 return Ok(()); // Gracefully skip to the next loop iteration
             }

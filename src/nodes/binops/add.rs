@@ -258,7 +258,7 @@ where
     fn on_update(&mut self) -> Result<(), UpdateError> {
         tracing::debug!("[SimpleAddNode] on_update() called.");
 
-        // ⚠ Assumes both inputs are ready – will panic otherwise
+        // Assumes both inputs are ready – will panic otherwise
         let a = self
             .io
             .inputs
@@ -277,7 +277,7 @@ where
             .expect("[SimpleAddNode] Input 1 missing");
 
         let result = a + b;
-        tracing::debug!("[DEBUG] Sending Value {:?}", result);
+        tracing::info!("SimpleAddNode: Adding {:?} + {:?} = {:?}", a, b, result);
         self.io.outputs.0.output.send(result)?;
 
         Ok(())

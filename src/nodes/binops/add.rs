@@ -276,7 +276,7 @@ where
             .take()
             .expect("[SimpleAddNode] Input 1 missing");
 
-        let result = a + b;
+        let result = a.clone() + b.clone();
         tracing::info!("SimpleAddNode: Adding {:?} + {:?} = {:?}", a, b, result);
         self.io.outputs.0.output.send(result)?;
 

@@ -4,8 +4,6 @@ use std::str::FromStr;
 use flowrs::connection::EdgeTrait;
 use flowrs::nodes::node_io::NodeIO;
 use flowrs::nodes::node_io::SetupIO;
-use flowrs::nodes::node_io::SetupInputsSync;
-use flowrs::nodes::node_io::SetupOutputs;
 use flowrs::nodes::node_io::SetupOutputsSync;
 use flowrs::nodes::node_io::TypedOutput;
 //use flowrs::RuntimeConnectable;
@@ -13,7 +11,6 @@ use flowrs::{
     connection::Output,
     node::{Node, ReadyError, UpdateError},
 };
-use tokio::runtime::Runtime;
 //#[derive(RuntimeConnectable)]
 pub struct ValueNode<O>
 where
@@ -90,8 +87,7 @@ where
     }
 
     fn setup_output(&mut self, idx: u128, local: bool) {
-        let rt = Runtime::new().unwrap();
-        rt.block_on(self.io.outputs.0.output.setup_output(idx, local));
+        self.io.outputs.setup_output_sync(idx, local);
     }
 
     fn get_io_mut(&mut self) -> &mut dyn SetupIO {
